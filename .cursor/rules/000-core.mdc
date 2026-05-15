@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+
+# Core conventions
+
+This rule is always applied. It is the shortest set of operating
+principles for any engineer using Cursor on this hack9 project. The full
+operating manual is in [AGENTS.md](mdc:AGENTS.md); read it before any
+non-trivial change.
+
+## Hackathon mode
+
+- Speed beats polish. Ship the demo win condition first.
+- Cosmetic concerns and refactors are deferred to `TODO.md`, not done
+  inline.
+- The 4-hour cap is sacred. After the 3:00 elapsed mark, no new
+  features — polish only.
+
+## Workflow contract
+
+- Every change ships as a PR. Open with `gh pr create`. Do not push to
+  `main` directly. Only P1 merges to `main`.
+- Branch names: `feat/<short-kebab>`, `spike/<short-kebab>`,
+  `fix/<short-kebab>`.
+- For parallel work, use git worktrees via the
+  [.claude/commands/spike.md](mdc:.claude/commands/spike.md) flow or
+  `bash scripts/spike.sh <name>`.
+
+## Code citations
+
+When discussing code in chat, cite specific locations with
+`path:line` (e.g. `lib/db/schema.ts:42`). Do not paraphrase code
+without citing.
+
+## Security
+
+- Never commit secrets. Use `.env.local` for runtime values and
+  `.env.example` for the public schema.
+- Anything matching `id_rsa`, `id_ed25519`, `*.pem` is off-limits.
+- The hooks in [.cursor/hooks.json](mdc:.cursor/hooks.json) and
+  [.claude/settings.json](mdc:.claude/settings.json) enforce some of
+  this; do not work around them.
+
+## Definition of Done
+
+A change is ready to ship when [AGENTS.md §5](mdc:AGENTS.md) Definition
+of Done holds. The short form:
+
+1. `pnpm typecheck` clean (or absent in Phase 1)
+2. Tests pass for changed modules
+3. Screenshot in PR body for UI changes
+4. Reviewer report says `OK_TO_MERGE: yes`
+5. No secrets added
+6. One-sentence "what + why" at the top of the PR body

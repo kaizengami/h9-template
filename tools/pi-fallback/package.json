@@ -1,0 +1,11 @@
+{
+  "name": "hack9-pi-fallback",
+  "version": "0.1.0",
+  "description": "Minimal Pi pack mirroring the highest-value Claude Code subagents. Install on demand when Claude Code is rate-limited.",
+  "private": true,
+  "keywords": ["pi-package"],
+  "pi": {
+    "prompts": ["./prompts"],
+    "skills": ["./skills"]
+  }
+}

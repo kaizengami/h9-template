@@ -1,0 +1,52 @@
+# Per-engineer Claude Code overrides — gitignored by convention.
+.claude/settings.local.json
+
+# Pi project-local settings (created by `pi install -l`).
+.pi/
+
+# Environment variables.
+.env
+.env.*
+!.env.example
+
+# Secrets directory — also denied at the harness level in .claude/settings.json.
+secrets/
+
+# Node / pnpm.
+node_modules/
+.pnpm-store/
+pnpm-debug.log*
+npm-debug.log*
+
+# Next.js (Phase 2 will add the app).
+.next/
+out/
+next-env.d.ts
+
+# Build artifacts.
+dist/
+build/
+*.tsbuildinfo
+
+# Test outputs.
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+
+# Demo artifacts intentionally committed — see PLAYBOOK Phase 4.
+# (demo.webm, demo.mp4, DEMO.md, DEMO_SLIDES.md, docs/screenshots/ all committed.)
+
+# Editor / OS noise.
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sibling worktrees created by scripts/spike.sh — they live OUTSIDE
+# this repo (at ../hack9-<name>), but keep this guard for paranoia.
+/hack9-*/
+
+# Local conflict scratchpad referenced in AGENTS.md §4.4.
+RESOLVE.md

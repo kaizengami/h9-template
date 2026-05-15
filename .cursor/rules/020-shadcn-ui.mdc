@@ -1,0 +1,74 @@
+---
+description: shadcn/ui + Tailwind conventions. Auto-attached for UI files under app/, components/, and any .tsx with JSX.
+globs: app/**/*.tsx, components/**/*.tsx, components/**/*.ts
+alwaysApply: false
+---
+
+# UI conventions — shadcn/ui + Tailwind
+
+## Component sources
+
+- Use shadcn/ui primitives first. Install on demand:
+
+  ```bash
+  npx shadcn@latest add <component>
+  ```
+
+- Installed components live under `components/ui/`. Do not edit them
+  in place — wrap if you need behavior changes, or re-run the add
+  command with `--overwrite` if you need an upstream update.
+- For application-specific composition, create new components under
+  `components/<feature>/` and re-use the `ui/` primitives.
+
+## Styling
+
+- Tailwind utility classes, not custom CSS. Use the `cn()` helper from
+  `lib/utils.ts` for conditional classes.
+- Design tokens come from the Tailwind config + shadcn's CSS variables.
+  Do not hard-code colors. Use `bg-background`, `text-foreground`,
+  `border-input`, etc.
+- Spacing scale: `1` (= 0.25rem) through `12`. Avoid arbitrary values
+  like `pt-[13px]` unless matching an external design.
+- `cn()` ordering: layout → spacing → typography → color → state.
+  Don't fight the formatter; let Prettier-with-Tailwind-plugin sort.
+
+## Accessibility
+
+- Every interactive element has a visible focus state. Most shadcn
+  primitives provide this; preserve it.
+- Icon-only buttons require `aria-label` or a `<span class="sr-only">`.
+- Form inputs have labels associated via `htmlFor`/`id`.
+- Color is never the only signal — pair with text or icon.
+- `<button>` for actions; `<a>` only for navigation.
+
+## Responsive design
+
+- Mobile first. Default classes are mobile; add `sm:`, `md:`, `lg:`
+  modifiers for larger breakpoints.
+- Test at `sm` (≥ 640px), `md` (≥ 768px), and `lg` (≥ 1024px) in the
+  browser MCP before opening a UI PR.
+
+## Loading and empty states
+
+- Async UI exposes three states explicitly: loading, empty, success.
+  Skeletons (`<Skeleton>` from shadcn) for loading. Inline empty-state
+  messages with a clear next action.
+- Errors surface as toasts (`sonner`) for transient issues, or as
+  inline banners for blocking issues.
+
+## Animations
+
+- Use `transition-` utilities for hover/focus/state transitions.
+- For mount/unmount: shadcn's built-in `data-[state]` selectors. Do
+  not pull in `framer-motion` unless explicitly approved by
+  `@architect`.
+- No decorative animations on hover unless they communicate state.
+
+## Server/client boundary
+
+- Most components are server components. `'use client'` only when:
+  - Component uses `useState`, `useReducer`, or React hooks
+  - Component handles browser events (onClick, onChange, etc.)
+  - Component reads `window`, `document`, or other browser APIs
+- Composition pattern: put the `'use client'` part as a leaf, pass
+  server-fetched data down as props.

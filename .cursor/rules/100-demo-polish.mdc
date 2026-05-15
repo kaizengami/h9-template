@@ -1,0 +1,83 @@
+---
+description: Apply when finalizing the demo — polish UX details, audit happy path for loading/empty/error states, fix obvious visual rough edges, ensure no console errors. Use only in Phase 4 (3:00+ elapsed) and only after the feature freeze.
+---
+
+# Demo polish
+
+This rule applies during the final 90-minute polish window (Phase 3 and
+Phase 4 in [PLAYBOOK.md](mdc:PLAYBOOK.md)). It is "Apply Intelligently"
+— Cursor decides relevance based on the description above.
+
+## What polish means at hackathon time
+
+It does **not** mean redesign, refactor, or feature additions. It means
+making the parts that already work look intentional.
+
+## Checklist when applied
+
+Audit each of these on the happy path:
+
+### Visible state coverage
+
+- **Loading**: every async action shows a skeleton, spinner, or
+  disabled state.
+- **Empty**: every list/grid/table has a no-results state with a clear
+  next action.
+- **Error**: every fetch surfaces a user-friendly message, not a stack
+  trace or raw error code.
+- **Success**: every mutation gives feedback (toast, inline checkmark,
+  navigation).
+
+### Interaction polish
+
+- All buttons have hover and active states (shadcn primitives provide
+  these; verify they're not overridden).
+- All forms have client-side validation feedback inline, not just
+  on submit.
+- Disabled buttons explain why (via tooltip or helper text), don't
+  just appear inert.
+- Modal close-on-Escape works. Confirm with keyboard testing.
+
+### Visual
+
+- No console errors. Open browser DevTools, walk the happy path,
+  verify clean console.
+- No layout shift on data load. Skeletons match the loaded layout's
+  dimensions.
+- No truncated text in the demo path. Test at 1280×800 (likely judge
+  viewport).
+- Demo viewport at 1920×1080 if recording at that resolution.
+
+### Performance fast-checks
+
+- Initial route loads in &lt; 2 seconds on the demo machine.
+- Demo path interactions feel instant (&lt; 100ms perceived) for any
+  client-side state changes.
+- Any single slow operation has a loading state; never a frozen UI.
+
+## What to do when you find issues
+
+- Trivial fix (&lt; 5 min, clearly bounded): fix on the current
+  branch, commit as `polish(<scope>): <change>`, open a small PR.
+- Non-trivial fix: file in `TODO.md` and move on. Phase 4 is not the
+  time to chase rabbit holes.
+- Bug that breaks the demo path: STOP. Escalate to `@bug-hunter` in
+  Claude Code immediately. The demo path must work end-to-end.
+
+## What to capture
+
+While auditing, capture screenshots of the polished happy path:
+
+- Save to `docs/screenshots/` with descriptive names
+  (`01-landing.png`, `02-empty-state.png`, etc.).
+- Reference them in `DEMO.md` and `README.md`.
+
+## Don't
+
+- Do not redesign components. If a design choice bothers you, file in
+  `TODO.md`.
+- Do not add new features. The feature freeze is in effect.
+- Do not change copy unless it's clearly wrong (typos, broken
+  grammar). Copy changes can derail rehearsed narration.
+- Do not edit `.claude/`, `.cursor/`, `AGENTS.md`, `PLAYBOOK.md`, or
+  `MATRIX.md` during demo polish. The configuration is frozen too.

@@ -1,0 +1,65 @@
+---
+description: TypeScript conventions for hack9. Auto-attached when working in any .ts or .tsx file.
+globs: **/*.ts, **/*.tsx
+alwaysApply: false
+---
+
+# TypeScript conventions
+
+These apply to all TypeScript files in the repository. They are
+intentionally short — the goal is consistency under time pressure, not
+purity.
+
+## Types
+
+- `strict: true` in [tsconfig.json](mdc:tsconfig.json). Do not weaken
+  it.
+- No `any`. If you need an escape hatch, use `unknown` and narrow.
+- Prefer `type` aliases over `interface` unless you need declaration
+  merging.
+- Export `type Props` alongside every React component.
+
+## Imports
+
+- Path aliases via `tsconfig.json` `paths`. Prefer `@/lib/x` over
+  `../../lib/x`.
+- One import group per source: `node:` → external → `@/` → relative.
+  Auto-formatted by Prettier; do not hand-sort.
+- Use `import type` for type-only imports. `verbatimModuleSyntax` is
+  on; mixing values and types in one import is a type error.
+
+## Async
+
+- Prefer `async`/`await` over `.then()` chains.
+- Wrap fallible operations in a typed result, not a try/catch wall:
+
+  ```ts
+  type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
+  ```
+
+- Top-level entry points (route handlers, server actions) catch and
+  return a user-safe error message. Lower-level functions let errors
+  propagate.
+
+## Validation
+
+- All user input goes through Zod schemas before reaching business
+  logic. No exceptions.
+- Schemas live next to their consumer, named `<Thing>Schema`. Export
+  the inferred type as `<Thing>` (`z.infer<typeof FooSchema>`).
+
+## Server vs client (Next.js App Router)
+
+- Server components are the default. `'use client'` only when needed.
+- Server actions go in `actions.ts` files colocated with the route.
+- Database access only from server components, route handlers, or
+  server actions — never from `'use client'` code.
+
+## Don't
+
+- No default exports for components or utilities. Named exports only.
+  Default exports are reserved for Next.js convention (pages, layouts,
+  config files).
+- No barrel files (`index.ts` re-exports) unless the consumer can't
+  import directly.
+- No `enum`. Use string unions or `as const` objects.
