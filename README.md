@@ -1,4 +1,4 @@
-# hack9 hackathon template
+# h9 template
 
 Configuration scaffold for a 3-engineer hackathon team running primarily on
 **Claude Code**, with Cursor as a secondary surface for demo polish and Pi
