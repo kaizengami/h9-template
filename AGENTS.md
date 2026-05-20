@@ -98,17 +98,16 @@ fresh branch and opens a new tmux pane rooted there (the user launches
 `cursor .` in the new pane). Two engineers can run independent spikes
 simultaneously without stepping on each other's working tree.
 
-### 4.3 Pull requests
+### 4.3 Pull requests (PRs) / Merge Requests (MRs)
 
-- All PRs opened via `gh pr create` from inside the agent (do not rely on a
-  human navigating GitHub).
-- PR body must include the checklist from
+- All PRs/MRs are opened via the unified VCS helper `bash scripts/vcs-helper.sh pr-create <title> <branch> <body-file>` from inside the agent (supports GitHub via `gh`, GitLab via `glab`, or gracefully falls back to providing exact manual Git/Web instructions if CLIs are missing).
+- The PR/MR body must include the checklist from
   [.cursor/commands/pr-merge.md](.cursor/commands/pr-merge.md) Definition
   of Done section.
-- UI PRs require a screenshot or Playwright recording in the PR body. The
+- UI changes require a screenshot or Playwright recording in the PR/MR body. The
   `@demo-builder` subagent attaches it.
-- P1 is the **only** person who merges PRs to `main`. P2 and P3 review and
-  approve; P1 squashes-and-merges.
+- P1 is the **only** person who merges PRs/MRs to `main`. P2 and P3 review and
+  approve; P1 squashes-and-merges using `/pr-merge` (which uses the VCS helper).
 
 ### 4.4 Conflicts
 

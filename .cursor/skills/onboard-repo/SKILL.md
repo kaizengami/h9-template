@@ -49,8 +49,7 @@ or
    does this thing do" — don't paraphrase, quote when possible.
 4. **Surface hot files** from the probe output (`git log` frequency).
    These are the highest-leverage files to read next.
-5. **Check open issues**, if it's a GitHub repo: `gh issue list
-   --limit 10 --json number,title,labels`.
+5. **Check open issues**, if it's a Git repo: `bash scripts/vcs-helper.sh issue-list`.
 6. **Synthesize ONBOARDING.md** at the repo root using the template
    below. Keep it under 80 lines.
 7. **Report back** to the calling session: "ONBOARDING.md written.
@@ -150,5 +149,5 @@ review the build pipeline before we touch anything.">
   visitor.
 - Don't run `pnpm install` or `pip install` from this skill. That's
   the calling session's decision.
-- Don't `gh issue triage` or comment on issues. That's
+- Don't triage issues or comment on issues. That's
   [issue-triage](../issue-triage/SKILL.md)'s job.

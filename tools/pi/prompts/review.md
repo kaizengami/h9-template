@@ -8,8 +8,8 @@ Review the target diff and produce a structured report.
 
 ## Target resolution
 
-- If $1 looks like a number (e.g. `42`): treat as PR `#42`. Run
-  `gh pr diff $1` and `gh pr view $1`.
+- If $1 looks like a number (e.g. `42`): treat as PR/MR `#42`. Run
+  `bash scripts/vcs-helper.sh pr-diff $1` and `bash scripts/vcs-helper.sh pr-view $1`.
 - If $1 looks like a branch name (matches `git branch --list $1`):
   treat as a branch. Run `git diff main...$1`.
 - If $@ is empty: review the current working tree. Run `git diff` and
@@ -48,8 +48,8 @@ OK_TO_MERGE: <yes|no>
 
 ## Rules
 
-- **Read-only.** Never edit. Never push, merge, or comment on the PR
-  via `gh`. Output the report to stdout only.
+- **Read-only.** Never edit. Never push, merge, or comment on the PR/MR
+  via CLI. Output the report to stdout only.
 - **Cite with `path:line`.** No vague findings.
 - **Hackathon-mode bar.** Acceptable: deferred polish, small TODOs.
   Unacceptable: bugs that break the demo, exposed secrets, failing

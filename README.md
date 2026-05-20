@@ -15,7 +15,8 @@ finalizes the stack choices.
 
 ```bash
 # 1. Verify prerequisites (all three engineers' laptops)
-gh auth status             # GitHub CLI logged in
+# Verify VCS CLI: either GitHub CLI (gh) OR GitLab CLI (glab)
+gh auth status             # Logged in to github.com (OR glab auth status --hostname vcs.levi9.com)
 tmux -V                    # tmux for parallel sessions
 node --version             # Node 20+ for MCP servers via npx
 

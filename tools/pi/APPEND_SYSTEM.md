@@ -44,8 +44,8 @@ or the parallel work completes.
 ## What this pack does NOT do
 
 - Open PRs. The team's PR discipline lives in Cursor's `/pr-merge`
-  flow (P1-only). Pi sessions stage commits; the user opens the PR
-  manually with `gh pr create`.
+  flow (P1-only). Pi sessions stage commits; the user opens the PR/MR
+  manually with the VCS helper or `bash scripts/vcs-helper.sh pr-create`.
 - Edit `AGENTS.md`, `PLAN.md`, `MISSION.md`, `MATRIX.md`,
   `CHALLENGE.md`, or `PLAYBOOK.md`. These are owned by P1 in the
   primary harness.

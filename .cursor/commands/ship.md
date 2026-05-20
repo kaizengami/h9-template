@@ -53,14 +53,14 @@ Review clean. Open PR? (continue / stop)
 
 ### Step 6 — Open PR
 
-Run `gh pr create` with:
+Run `bash scripts/vcs-helper.sh pr-create <title> <branch> <body-file>` with:
 
 - Title: derived from the feature description
 - Body: includes the one-sentence feature description, the
   reviewer report, and the Definition of Done checklist from
   [AGENTS.md §5](../../AGENTS.md).
 
-Print the PR URL.
+Print the PR/MR URL.
 
 ## Notes
 

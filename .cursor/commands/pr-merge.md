@@ -14,28 +14,27 @@ are not P1, stop here and ask P1 to merge.
 
 Run these checks in order. Any failure aborts the merge.
 
-1. PR exists and is open:
+1. PR/MR exists and is open:
    ```bash
-   gh pr view $1 --json state,mergeable,reviewDecision
+   bash scripts/vcs-helper.sh pr-view $1
    ```
-   Require: `state == "OPEN"`, `mergeable == "MERGEABLE"`.
+   Require: State is open and there are no conflicts.
 
-2. Reviewer report attached and clean. Search the PR comments for the
+2. Reviewer report attached and clean. Search the PR/MR comments for the
    most recent `OK_TO_MERGE:` line. Require `OK_TO_MERGE: yes`.
 
-3. CI is green if `.github/workflows/` exists. Run:
+3. CI is green. Run:
    ```bash
-   gh pr checks $1
+   bash scripts/vcs-helper.sh pr-checks $1
    ```
-   Require: all checks `pass` or absent (Phase 1 has no CI, so this is
-   allowed to return nothing).
+   Require: all checks pass or are absent.
 
-4. PR body contains the Definition of Done checklist
+4. PR/MR body contains the Definition of Done checklist
    ([AGENTS.md §5](../../AGENTS.md)). Require all boxes checked.
 
 5. No new files under `.env`, `secrets/`, or other secret paths. Run:
    ```bash
-   gh pr diff $1 --name-only | grep -E '^\.env|^secrets/'
+   bash scripts/vcs-helper.sh pr-diff $1 --name-only | grep -E '^\.env|^secrets/'
    ```
    Require: no output.
 
@@ -44,14 +43,7 @@ Run these checks in order. Any failure aborts the merge.
 If all gates pass:
 
 ```bash
-gh pr merge $1 --squash --delete-branch
-```
-
-Then:
-
-```bash
-git switch main
-git pull --ff-only
+bash scripts/vcs-helper.sh pr-merge $1
 ```
 
 ### Post-merge

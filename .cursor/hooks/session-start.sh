@@ -35,17 +35,11 @@ cd "$project_dir" 2>/dev/null || exit 0
     echo "(not in a git repo)"
   fi
 
-  if command -v gh >/dev/null 2>&1; then
-    if command -v jq >/dev/null 2>&1; then
-      open_prs=$(gh pr list --limit 10 --json number,title 2>/dev/null \
-        | jq -r 'if length==0 then "open PRs: (none)" else "open PRs: " + ([.[] | "#\(.number) \(.title)"] | join(", ")) end' 2>/dev/null \
-        || echo "open PRs: (gh unavailable)")
-      echo "$open_prs"
-    else
-      echo "open PRs: $(gh pr list --limit 10 2>/dev/null | head -10 | wc -l | tr -d ' ') (install jq for titles)"
-    fi
+  if [ -f scripts/vcs-helper.sh ]; then
+    open_prs=$(bash scripts/vcs-helper.sh pr-list 2>/dev/null | grep -v 'VCS HELPER' | head -n 3 | wc -l | tr -d ' ')
+    echo "open PRs/MRs: ${open_prs} detected"
   else
-    echo "open PRs: (gh CLI not installed)"
+    echo "open PRs/MRs: (helper unavailable)"
   fi
 
   if [ -f PLAN.md ]; then

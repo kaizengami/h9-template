@@ -34,8 +34,8 @@ that path.
 5. **Check existing AI config** — note presence of `AGENTS.md`,
    `CLAUDE.md`, `.cursor/`, `.claude/`, `.github/workflows/`.
 
-6. **Check open issues** if it's a GitHub repo:
-   `gh issue list --limit 10 --json number,title,labels`.
+6. **Check open issues** if it's a Git repo:
+   `bash scripts/vcs-helper.sh issue-list`.
 
 7. **Write `ONBOARDING.md`** at the repo root using this template
    (keep under 80 lines):
@@ -81,7 +81,7 @@ that path.
 - `.cursor/`: <present/absent>
 - `.claude/`: <present/absent>
 
-## Open issues (if GitHub)
+## Open issues
 - #N: <title> [labels]
 
 ## Open questions for the team

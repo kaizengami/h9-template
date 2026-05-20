@@ -36,7 +36,7 @@ for the strategic rationale.
 | Hooks via `.cursor/hooks.json` schema v1 | [.cursor/hooks.json](.cursor/hooks.json) wires `sessionStart` and `afterFileEdit` |
 | Workspace MCP via `.cursor/mcp.json` | Playwright (demo recording) + Context7 (live docs) |
 | Subagent delegation via `Task` tool with `subagent_type` | `Task(..., subagent_type: "explore")` used by `explore-codebase`; named subagents in `.claude/agents/` (e.g. `@reviewer`, `@implementer`) referenced from `Task` |
-| `gh` CLI preferred over REST API | [AGENTS.md §4.3](AGENTS.md), [.cursor/commands/pr-merge.md](.cursor/commands/pr-merge.md) |
+| VCS CLI (gh/glab) preferred over REST API | [AGENTS.md §4.3](AGENTS.md), [.cursor/commands/pr-merge.md](.cursor/commands/pr-merge.md), [scripts/vcs-helper.sh](scripts/vcs-helper.sh) |
 | Worktree pattern for parallel work | [scripts/spike.sh](scripts/spike.sh), [.cursor/commands/spike.md](.cursor/commands/spike.md) |
 | Path-relative skill scripts (no Windows paths) | All bundled scripts use Unix paths and `${CURSOR_PROJECT_DIR}` |
 
@@ -185,6 +185,12 @@ Surgical edits make the new skills load-bearing rather than optional:
 - [.claude/agents/bug-hunter.md](.claude/agents/bug-hunter.md) Rule 2
   requires `/repro` before investigation when no failing test exists.
 
+### C9 — VCS Neutrality and GitLab/vcs.levi9.com Support
+
+The previous configuration was heavily coupled to GitHub (`gh` CLI). In corporate settings, internal hackathons are frequently run on self-hosted GitLab instances (e.g. `vcs.levi9.com`), where GitHub CLI cannot communicate.
+
+**Action:** implemented a robust, unified VCS abstraction layer at [scripts/vcs-helper.sh](scripts/vcs-helper.sh) that dynamically detects whether the active repository is GitHub-based or GitLab-based, checks for corresponding CLI auth (`gh` or `glab`), and translates high-value operations seamlessly. If neither CLI is present/authenticated, it prints precise, copy-pasteable manual Git and Web UI instructions to ensure zero-friction fallback. Adapted all 12 Cursor commands, 9 skills, session-start hooks, and the Pi fallback pack to route all VCS operations through this helper.
+
 ### Language coverage choice: TypeScript + Python
 
 The team explicitly picked TS+Python over TS-only or full polyglot
@@ -214,7 +220,7 @@ language and surface basic structure.
 | Mirror given-repo skills into `tools/pi/` | Pi pack already mirrors the 5 highest-value Cursor commands. Mirroring all 9 skills would duplicate maintenance. | If Pi becomes the team's primary |
 | New subagent for "repo onboarder" | 9 agents is the right cap; procedural content goes in skills, not agents. | Never |
 | GitHub Actions / CI integration | 4-hour event is too short to debug CI flakes. | Post-event template hardening |
-| GitLab/Linear adapters for `issue-triage` | Increases skill surface for low-probability scenarios. | Hackathon brief specifies non-GitHub tracker |
+| Linear/Jira adapters for issue-triage | Increases skill surface for low-probability scenarios. | Hackathon brief specifies non-VCS tracker |
 
 ## How to use this document
 

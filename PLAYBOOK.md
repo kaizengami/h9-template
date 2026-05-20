@@ -18,15 +18,15 @@ Done by 30 minutes before kickoff:
 - [ ] Cursor installed, signed into Cursor Enterprise on all three laptops.
 - [ ] Pi installed on at least one laptop (any of P1/P2/P3) so the
       fallback is ready when any engineer needs it.
-- [ ] `gh auth status` returns `Logged in to github.com`.
+- [ ] VCS CLI is authenticated: either `gh auth status` for GitHub, OR `glab auth status --hostname vcs.levi9.com` (authenticated via Azure AD) for Levi9 GitLab.
 - [ ] `tmux -V` prints a version (we use tmux for parallel sessions).
 - [ ] `npx playwright install chromium` has been run at least once
       (browsers cached locally).
 - [ ] Each engineer has cloned a fresh copy of this template into a new
       empty directory; the team agrees in advance which laptop is the
       "main" laptop that owns `main` branch pushes.
-- [ ] The team's GitHub repo for the hackathon exists (create empty repo,
-      add it as `origin` on P1's laptop).
+- [ ] The team's repository on vcs.levi9.com exists (create empty repo,
+      add it as `origin` on all laptops).
 - [ ] Whatever credentials the organizers issue (Cursor enterprise pool,
       Pi token, etc.) are configured in each engineer's environment.
 - [ ] The Pi pack lives under [tools/pi/](tools/pi/) and is committed —
@@ -142,7 +142,7 @@ commands, explicit verdict format. Easy to pitch.
 ### P2 — Implementer
 
 - Use `/ship <feature>` for clearly-scoped features. This runs
-  `@planner → @implementer → @test-writer → @reviewer → gh pr create`
+  `@planner → @implementer → @test-writer → @reviewer → pr-create` (via the VCS helper)
   sequentially in your session.
 - For exploratory features, use `/spike` first, then promote the spike
   branch to a `feat/` PR once viable.
@@ -273,12 +273,12 @@ video are all committed and pushed to `main`.
    (for the judges — the configuration evolved during the event is
    itself an interesting artifact).
 
-### "GitHub is down"
+### "VCS (vcs.levi9.com or GitHub) is down"
 
-1. Continue committing locally. Replace `gh pr create` with branch
+1. Continue committing locally. Replace `bash scripts/vcs-helper.sh pr-create` with branch
    pushes to a local bare-repo clone (`git clone --bare main.git
    ../sync.git`) that the team uses as a temporary `origin`.
-2. Push to GitHub when it recovers, before submission.
+2. Push to the remote VCS when it recovers, before submission.
 
 ### "P1 gets pulled into a meeting / leaves the room"
 

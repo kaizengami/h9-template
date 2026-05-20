@@ -32,10 +32,10 @@ produce.
    - No console errors during interaction?
    - Layout stable on data load (no shift)?
 
-5. Post screenshots to the PR via:
+5. Post screenshots to the PR/MR via:
 
    ```bash
-   gh pr comment <PR#> --body "<screenshots and findings>"
+   bash scripts/vcs-helper.sh pr-comment <PR#> "<screenshots and findings>"
    ```
 
 6. Decide:

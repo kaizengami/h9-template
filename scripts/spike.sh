@@ -125,7 +125,8 @@ When the spike is done, either promote it:
 
     cd "$worktree_path"
     git switch -c feat/$name
-    gh pr create
+    # Open PR/MR using the VCS helper (e.g. bash scripts/vcs-helper.sh pr-create "feat/$name" "feat/$name" body_file):
+    bash scripts/vcs-helper.sh pr-create "feat/$name" "feat/$name" body.md
 
 Or discard:
 

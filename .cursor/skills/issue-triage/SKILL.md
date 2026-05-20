@@ -1,11 +1,11 @@
 ---
 name: issue-triage
-description: Pull a GitHub issue and extract symptom, repro steps, environment, suspected files. Use when the challenge gives you GitHub issues to fix. Outputs a triage doc that feeds into /repro and /onboard.
+description: Pull a GitHub or GitLab issue and extract symptom, repro steps, environment, suspected files. Use when the challenge gives you issues to fix. Outputs a triage doc that feeds into /repro and /onboard.
 ---
 
 # issue-triage
 
-Input pipeline from GitHub issues to actionable structured triage.
+Input pipeline from GitHub/GitLab issues to actionable structured triage.
 The hackathon may hand the team a list of issues to fix — this skill
 turns each issue into the structured input that `/repro` and
 `@bug-hunter` need, without the team manually reading and summarizing
@@ -33,16 +33,14 @@ Read-only. Never modifies issues, never posts comments, never assigns.
 
 ## Data to gather
 
-Run these commands first and feed the output into your reasoning:
+Run this command first and feed the output into your reasoning:
 
 ```bash
-gh issue view "<N or URL>" --json number,title,body,labels,state,author,createdAt,updatedAt
-gh issue view "<N or URL>" --json comments | jq '.comments[-10:]'
-gh issue view "<N or URL>" --json closingIssuesReferences
+bash scripts/vcs-helper.sh issue-view "<N or URL>"
 ```
 
-If `gh` is not authenticated or the issue is private and inaccessible,
-output `INCOMPLETE: gh not authenticated. Run gh auth login and
+If the CLI is not authenticated or the issue is private and inaccessible,
+output `INCOMPLETE: VCS CLI not authenticated. Run login and
 retry.` and stop.
 
 ## Your task
@@ -121,23 +119,22 @@ End with one status line:
    invent repro steps.
 5. **Triage one issue per invocation.** For multi-issue triage, the
    user should call this skill in a loop.
-6. **Read-only.** Never `gh issue comment`, `gh issue close`, or
-   `gh issue edit` from this skill.
+6. **Read-only.** Never make modifying API calls from this skill.
 
 ## Failure modes
 
-- **`gh` not authenticated.** Output `INCOMPLETE: gh not
-  authenticated. Run gh auth login and retry.` and stop.
+- **VCS CLI not authenticated.** Output `INCOMPLETE: VCS CLI not
+  authenticated. Run login and retry.` and stop.
 - **Issue from a private repo we don't have access to.** Same
   symptom; same response.
 - **Issue is closed with a fix.** Note in the triage doc, suggest
-  reading the closing PR's diff instead of re-reproducing.
+  reading the closing PR/MR's diff instead of re-reproducing.
 
 ## Don't
 
 - Don't assign or label. Read-only.
 - Don't follow links to external bug trackers (Linear, Jira) — this
-  skill is GitHub-only. If the issue is cross-posted, note it and
+  skill is VCS-only (GitHub/GitLab). If the issue is cross-posted, note it and
   stop.
 - Don't fetch the linked PR's diff here. That's for the next agent
   (`/repro` or `@bug-hunter`).

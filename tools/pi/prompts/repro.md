@@ -13,7 +13,7 @@ Write a single minimal failing test that reproduces the bug.
 
 2. **Resolve the bug source:**
    - If `$@` looks like an issue number (`#N` or just `N`), fetch
-     with `gh issue view N --json title,body,comments`.
+     with `bash scripts/vcs-helper.sh issue-view N`.
    - If `$@` is a stack trace, parse the file:line.
    - Otherwise treat `$@` as a free-form description.
 

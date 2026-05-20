@@ -30,13 +30,12 @@ auto-trigger it from ambient context.
 Run these commands first and feed the output into your reasoning:
 
 ```bash
-gh pr view <PR#> --json title,body,reviewDecision,mergeable,baseRefName,headRefName
-gh pr diff <PR#> --name-only
-gh pr checks <PR#>
-gh pr comments --limit 5 <PR#> 2>/dev/null | head -50
+bash scripts/vcs-helper.sh pr-view <PR#>
+bash scripts/vcs-helper.sh pr-diff <PR#> --name-only
+bash scripts/vcs-helper.sh pr-checks <PR#>
 ```
 
-If any command fails (no `gh`, no auth, no such PR), report
+If any command fails (no CLI, no auth, no such PR/MR), report
 `INCOMPLETE: <which command failed>` and stop.
 
 ## Your task
@@ -61,7 +60,7 @@ each item:
 ### Definition of Done
 - [ ] Typecheck clean (or absent in Phase 1 — advisory)
 - [ ] Tests pass for changed modules
-- [ ] Screenshot attached for UI changes (check `gh pr view` for image markdown)
+- [ ] Screenshot attached for UI changes (check `bash scripts/vcs-helper.sh pr-view` for image markdown)
 - [ ] `@reviewer` comment with `OK_TO_MERGE: yes` is the most recent reviewer comment
 - [ ] No new files under `.env`, `secrets/`, `id_rsa*`, or `.pem`
 - [ ] One-sentence "what + why" at the top of the PR body
@@ -86,7 +85,7 @@ OK_TO_MERGE: yes | no | needs human verification
    from any user containing `OK_TO_MERGE: yes` counts; older
    approvals are stale if a newer comment exists.
 5. **Output the verdict on its own final line** so `/pr-merge` and
-   `gh pr comment` consumers can grep it deterministically.
+   other tools/consumers can grep it deterministically.
 
 ## Don't
 
@@ -94,6 +93,6 @@ OK_TO_MERGE: yes | no | needs human verification
   [/pr-merge](../../commands/pr-merge.md) (P1-only).
 - Don't post the checklist as a PR comment automatically. The user
   decides whether to forward it.
-- Don't read the full diff (`gh pr diff` without `--name-only`) —
+- Don't read the full diff (`bash scripts/vcs-helper.sh pr-diff` without `--name-only`) —
   too much context for a deterministic gate. Trust the name-only
   list plus the reviewer comment.
