@@ -72,9 +72,9 @@ Plus: drop key screenshots into `docs/screenshots/` and reference them in
    walk the happy path manually, and only then write narration. Never
    write narration from imagination.
 2. **Use Playwright for recording.** The MCP server is declared in
-   [.mcp.json](../../.mcp.json). Use `page.video()` with `--video=on`.
-   Do not record live via QuickTime or OBS — that produces brittle
-   takes.
+   [.cursor/mcp.json](../../.cursor/mcp.json). Use `page.video()` with
+   `--video=on`. Do not record live via QuickTime or OBS — that
+   produces brittle takes.
 3. **Trim aggressively.** Anything over 3:00 loses the judges. Aim 2:30.
 4. **Lead with the AI orchestration story.** Slide 3 must reference
    [MATRIX.md](../../MATRIX.md) — that's the criterion the judges are

@@ -13,14 +13,16 @@ Confirm before starting:
 1. `MISSION.md` exists and the happy path works end-to-end on `main`.
 2. `pnpm dev` is running locally on the demo machine.
 3. The Playwright MCP server is reachable (it's declared in
-   [.mcp.json](mdc:.mcp.json) at the repo root; Cursor inherits it).
+   [.cursor/mcp.json](mdc:.cursor/mcp.json); Cursor picks it up
+   automatically when the workspace opens).
 4. The team's chat has been notified — no commits land while recording.
 
 ## Steps
 
 1. Read [DEMO.md](mdc:DEMO.md) if it exists. If not, run
-   [@demo-builder](mdc:.claude/agents/demo-builder.md) in Claude Code
-   first to produce a narration script.
+   [@demo-builder](mdc:.claude/agents/demo-builder.md) (or invoke
+   `/demo` for the full artifact pipeline) to produce a narration
+   script first.
 2. Walk through the narration with the browser MCP, taking
    screenshots at each `**[m:ss]**` marker in `DEMO.md`. Save to
    `docs/screenshots/NN-<descriptor>.png`.

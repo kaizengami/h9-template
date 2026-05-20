@@ -1,5 +1,6 @@
-# Per-engineer Claude Code overrides — gitignored by convention.
-.claude/settings.local.json
+# Per-engineer Cursor overrides — gitignored by convention so the
+# shared .cursor/ tree stays the team's deliverable.
+.cursor/settings.local.json
 
 # Pi project-local settings (created by `pi install -l`).
 .pi/
@@ -9,7 +10,8 @@
 .env.*
 !.env.example
 
-# Secrets directory — also denied at the harness level in .claude/settings.json.
+# Secrets directory — also guarded by the /pr-merge gate before any
+# diff hits main.
 secrets/
 
 # Node / pnpm.

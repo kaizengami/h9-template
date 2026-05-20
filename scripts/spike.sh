@@ -10,7 +10,7 @@
 #
 # Creates a sibling worktree at ../hack9-<name> on branch spike/<name>,
 # writes a SPIKE.md file in the worktree, and prints the command to open
-# a new Claude Code session there in a tmux pane.
+# a new Cursor window rooted at that worktree (via tmux).
 
 set -euo pipefail
 
@@ -109,17 +109,17 @@ Spike ready.
   Branch:    $branch
   SPIKE.md:  $worktree_path/SPIKE.md
 
-Open in a new tmux pane (split horizontally, runs claude in the worktree):
+Open in a new tmux pane (split horizontally, opens Cursor in the worktree):
 
-    tmux split-window -h -c "$worktree_path" "claude"
+    tmux split-window -h -c "$worktree_path" "cursor ."
 
 Or open in a new tmux window:
 
-    tmux new-window -c "$worktree_path" "claude"
+    tmux new-window -c "$worktree_path" "cursor ."
 
 Or attach manually:
 
-    cd "$worktree_path" && claude
+    cd "$worktree_path" && cursor .
 
 When the spike is done, either promote it:
 

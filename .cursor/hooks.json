@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/session-start.sh",
+        "timeout": 5
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/post-edit-typecheck.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

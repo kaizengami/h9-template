@@ -3,8 +3,10 @@
 Use during Phase 2 (build) for any PR that changes UI. Cursor's
 `cursor-ide-browser` MCP loads the dev server, navigates the changed
 flow, and verifies visual expectations. This is a complement to
-[`@reviewer`](mdc:.claude/agents/reviewer.md) in Claude Code, not a
-replacement.
+[`@reviewer`](mdc:.claude/agents/reviewer.md), not a replacement —
+the reviewer subagent reads the diff and writes an OK_TO_MERGE report;
+this command adds the visual evidence that diff-only review cannot
+produce.
 
 ## Pre-flight
 
@@ -46,8 +48,9 @@ replacement.
 
 ## Don't
 
-- Don't run `@reviewer` from here — that's a Claude Code subagent.
-  This command is the visual complement to a reviewer report.
+- Don't run `@reviewer` from here. Run `/review <PR#>` instead — this
+  command is the visual complement to a reviewer report, not a
+  substitute for it.
 - Don't edit the code from this command. If a tiny fix is obvious,
   add a one-line PR comment with the suggestion; the PR author
   applies it.

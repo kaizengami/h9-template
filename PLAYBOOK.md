@@ -15,9 +15,10 @@ gets judged.
 
 Done by 30 minutes before kickoff:
 
-- [ ] Cursor, Claude Code, Pi installed and logged in on all three laptops.
+- [ ] Cursor installed, signed into Cursor Enterprise on all three laptops.
+- [ ] Pi installed on at least one laptop (any of P1/P2/P3) so the
+      fallback is ready when any engineer needs it.
 - [ ] `gh auth status` returns `Logged in to github.com`.
-- [ ] `claude --version` and `pi --version` both print a version.
 - [ ] `tmux -V` prints a version (we use tmux for parallel sessions).
 - [ ] `npx playwright install chromium` has been run at least once
       (browsers cached locally).
@@ -26,11 +27,11 @@ Done by 30 minutes before kickoff:
       "main" laptop that owns `main` branch pushes.
 - [ ] The team's GitHub repo for the hackathon exists (create empty repo,
       add it as `origin` on P1's laptop).
-- [ ] Anthropic API key (or whatever tokens the organizers issue) is set
-      in each engineer's shell, exported as `ANTHROPIC_API_KEY` or the
-      equivalent the harness expects.
-- [ ] Pi pack is **not** pre-installed (we install it on demand only as a
-      rate-limit escape hatch).
+- [ ] Whatever credentials the organizers issue (Cursor enterprise pool,
+      Pi token, etc.) are configured in each engineer's environment.
+- [ ] The Pi pack lives under [tools/pi/](tools/pi/) and is committed —
+      any engineer can activate it via `bash scripts/pi-rescue.sh` when
+      Cursor rate-limits or when they want to scan a large context cheaply.
 
 ---
 
@@ -52,7 +53,7 @@ of challenge this is. The rest of Phase 1 branches on this:
   [CHALLENGE.md](CHALLENGE.md) instead of MISSION.md. Then for each
   given repo, run `/onboard <path>` (in parallel via worktrees if you
   have 3+ repos). For each problem sourced from a GitHub issue,
-  invoke the [issue-triage](.claude/skills/issue-triage/SKILL.md) skill
+  invoke the [issue-triage](.cursor/skills/issue-triage/SKILL.md) skill
   with the issue number. THEN run `/plan` against the consolidated
   picture in CHALLENGE.md.
 - **Hybrid** (one repo to extend + side tasks): both files apply.
@@ -65,9 +66,11 @@ fork required.
 ### P1 — Planner / Architect / Demo
 
 1. Read the challenge brief end to end without taking notes.
-2. Start Claude Code at the repo root.
-3. Run `/plan "<paste the challenge brief verbatim>"`. The `@planner`
-   subagent produces a draft `PLAN.md`.
+2. Open the repo in Cursor (the workspace auto-loads `.cursor/`).
+3. Run `/plan "<paste the challenge brief verbatim>"`. Cursor's `Task`
+   tool delegates to the `@planner` subagent (defined in
+   [.claude/agents/planner.md](.claude/agents/planner.md)) and produces
+   a draft `PLAN.md`.
 4. Manually rewrite the four bullets in [AGENTS.md §1](AGENTS.md). Commit
    `MISSION.md`, `AGENTS.md` update, and the draft `PLAN.md` on `main`.
    This is the only direct push to `main` allowed all day.
@@ -106,16 +109,18 @@ during Phase 3.
 
 ### Pattern of the day: Writer/Reviewer with fresh context
 
-This phase runs an explicit **Writer/Reviewer split** — the highest-
-leverage quality pattern in Anthropic's best practices doc and one of
-the things we'll articulate to the judges.
+This phase runs an explicit **Writer/Reviewer split** — a high-leverage
+quality pattern (separate session, no prior implementation bias) that
+we'll articulate to the judges as the reason for the dual-agent role
+split.
 
 - **P2 is the Writer.** P2 holds the implementation context, runs
   `@implementer`, opens PRs.
 - **P3 is the Reviewer with fresh context.** P3 reads each PR in a
-  separate session (no prior implementation context), runs
-  `@reviewer`, and emits `OK_TO_MERGE: yes/no`. A second pair of
-  eyes that wasn't biased by the act of writing the code.
+  separate Cursor window or fresh chat (no prior implementation
+  context), runs `@reviewer`, and emits `OK_TO_MERGE: yes/no`. A
+  second pair of eyes that wasn't biased by the act of writing the
+  code.
 - **P1 merges.** Only P1 merges, and only after P3's `OK_TO_MERGE:
   yes` is the most recent reviewer comment. P1 may run
   `/pr-checklist <num>` as a cheap deterministic gate before merging.
@@ -166,12 +171,14 @@ update `MISSION.md` accordingly.
 
 ### P1 — Planner / Architect / Demo
 
-- Open Cursor (this is the first time today). Apply the
-  `100-demo-polish` rule from
+- Apply the `100-demo-polish` rule from
   [.cursor/rules/100-demo-polish.mdc](.cursor/rules/100-demo-polish.mdc):
   audit happy-path interactions for missing loading/empty/error states.
-- Run `/demo-record` from Cursor to capture the first take of the
-  Playwright video.
+- Run `/demo-record` to capture the first take of the Playwright video.
+  The browser MCP declared in [.cursor/mcp.json](.cursor/mcp.json) walks
+  the happy path; the bundled
+  [playwright-recording](.cursor/skills/playwright-recording/SKILL.md)
+  skill captures the video and screenshots.
 
 ### P2 — Implementer
 
@@ -237,30 +244,34 @@ video are all committed and pushed to `main`.
 
 ## Recovery patterns
 
-### "Claude Code rate-limits us mid-session"
+### "Cursor rate-limits us mid-session"
 
 1. Affected engineer runs `bash scripts/pi-rescue.sh` from repo root.
-2. Pi launches in the same directory; the fallback pack is loaded.
+2. Pi launches in the same directory; the fallback pack at
+   [tools/pi/](tools/pi/) is loaded.
 3. Announce in chat: "P2 on Pi for rate-limit." Continue work using the
-   prompts in [tools/pi-fallback/prompts/](tools/pi-fallback/prompts/).
-4. Switch back to Claude Code when the rate limit clears (typically &lt;
-   15 minutes for Anthropic). The fallback pack stays installed; it does
-   no harm.
+   prompts in [tools/pi/prompts/](tools/pi/prompts/).
+4. Switch back to Cursor when the rate limit clears. The Pi pack stays
+   on disk; it does no harm.
 
 ### "Hooks are blocking edits"
 
-1. Add `--bare` to the `claude` invocation. This skips auto-loaded hooks,
-   skills, plugins, MCP, and CLAUDE.md.
-2. Investigate the hook in [.claude/hooks/](.claude/hooks/) after the
+1. Temporarily move `.cursor/hooks.json` aside (`mv .cursor/hooks.json
+   .cursor/hooks.json.off`). Cursor watches the file and disables hooks
+   when it's missing.
+2. Investigate the hook in [.cursor/hooks/](.cursor/hooks/) after the
    event. Do not fight the hook during the event.
 
-### "Anthropic tokens turn out to not be Anthropic tokens"
+### "Cursor tokens turn out to not be sufficient"
 
-1. P1 keeps Claude Code; P2 and P3 each open Cursor as their primary.
-2. The `.cursor/rules/` rules still apply; the team loses subagent
-   sharing but the slash commands in `.cursor/commands/` still work.
-3. Total switch time: ~15 minutes. Announce the switch in chat and update
-   `MATRIX.md` to reflect it (for the judges).
+1. The whole team moves to Pi as primary for the remainder of the
+   session. The Pi prompts in [tools/pi/prompts/](tools/pi/prompts/)
+   mirror the Cursor commands one-for-one.
+2. The `.cursor/rules/` content is human-readable and copy-pasteable
+   into Pi's system prompt if needed. Total switch time: ~15 minutes.
+3. Announce the switch in chat and update `MATRIX.md` to reflect it
+   (for the judges — the configuration evolved during the event is
+   itself an interesting artifact).
 
 ### "GitHub is down"
 
@@ -280,8 +291,9 @@ video are all committed and pushed to `main`.
 ## Closing reminders
 
 - The hackathon judges look at the **repo** at least as much as the
-  **demo**. `AGENTS.md`, `MATRIX.md`, `.claude/agents/*`, and PR bodies
-  are all judge-visible artifacts. Treat them like product surface.
+  **demo**. `AGENTS.md`, `MATRIX.md`, `.cursor/*`, `.claude/agents/*`,
+  and PR bodies are all judge-visible artifacts. Treat them like
+  product surface.
 - The 4-hour cap is sacred. We do not chase perfection past 3:00.
 - We win by orchestrating AI, not by writing more code than the next
   team. If you find yourself typing code instead of typing prompts,

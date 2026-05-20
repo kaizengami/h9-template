@@ -1,10 +1,9 @@
 # AGENTS.md — operating manual for hack9
 
-> This file is the single source of truth for all three engineers and all three
-> AI coding harnesses on the team. Cursor reads it natively; Claude Code
-> imports it via `@AGENTS.md` from [CLAUDE.md](CLAUDE.md); Pi walks it up
-> from cwd. Keep it short, concrete, and human-written — judges and agents
-> will both read it from end to end.
+> This file is the single source of truth for all three engineers on the
+> team. Cursor reads it natively; Pi walks it up from cwd. Keep it short,
+> concrete, and human-written — judges and agents will both read it from
+> end to end.
 
 ---
 
@@ -56,16 +55,20 @@ introduced in Phase 2 when we finalize the layout on the prep dry-run.
 
 ## 3. Roles and ownership
 
-Three engineers, all driving Claude Code as the primary harness. Each
-engineer **owns** three subagents under [.claude/agents/](.claude/agents/):
-they author them, tune their descriptions, and are the named escalation
-point if those subagents misbehave during the event.
+Three engineers, all driving Cursor as the shared primary harness. Pi is
+a shared rate-limit / parallel-work fallback that any engineer can switch
+to without coordination. Each engineer **owns** three subagents under
+[.claude/agents/](.claude/agents/) — Cursor's `Task` tool reads that
+directory natively, so the subagent definitions live there even though we
+no longer use Claude Code as a runtime. Owners author the subagent
+descriptions, tune them, and are the named escalation point if those
+subagents misbehave during the event.
 
-| Person | Role                       | Owns subagents                                       | Secondary tool      |
-| ------ | -------------------------- | ---------------------------------------------------- | ------------------- |
-| **P1** | Planner / Architect / Demo | `architect`, `planner`, `demo-builder`               | Cursor (last hour)  |
-| **P2** | Implementer                | `implementer`, `ui-designer`, `refactorer`           | none                |
-| **P3** | Reviewer / Tester / QA     | `reviewer`, `test-writer`, `bug-hunter`              | Pi (rate-limit only)|
+| Person | Role                       | Owns subagents                                       | Fallback                       |
+| ------ | -------------------------- | ---------------------------------------------------- | ------------------------------ |
+| **P1** | Planner / Architect / Demo | `architect`, `planner`, `demo-builder`               | Pi (shared, rate-limit relief) |
+| **P2** | Implementer                | `implementer`, `ui-designer`, `refactorer`           | Pi (shared, rate-limit relief) |
+| **P3** | Reviewer / Tester / QA     | `reviewer`, `test-writer`, `bug-hunter`              | Pi (shared, rate-limit relief) |
 
 Subagent files carry a `# Owner: PN` comment on line 1 of the body so that
 `head -1 .claude/agents/*.md` shows the ownership table directly. See
@@ -89,19 +92,19 @@ parallel work by three humans + nine subagents possible without merge chaos.
 ### 4.2 Worktrees for parallel work
 
 When P1, P2, or P3 wants to explore in parallel without blocking the main
-branch, run [/spike](.claude/commands/spike.md) (or `bash scripts/spike.sh
+branch, run [/spike](.cursor/commands/spike.md) (or `bash scripts/spike.sh
 <name>`). This creates a sibling git worktree at `../hack9-<name>/` on a
-fresh branch and opens a new tmux pane with Claude Code rooted there. Two
-engineers can run independent spikes simultaneously without stepping on
-each other's working tree.
+fresh branch and opens a new tmux pane rooted there (the user launches
+`cursor .` in the new pane). Two engineers can run independent spikes
+simultaneously without stepping on each other's working tree.
 
 ### 4.3 Pull requests
 
 - All PRs opened via `gh pr create` from inside the agent (do not rely on a
   human navigating GitHub).
 - PR body must include the checklist from
-  [.claude/commands/pr-merge.md](.claude/commands/pr-merge.md) Definition of
-  Done section.
+  [.cursor/commands/pr-merge.md](.cursor/commands/pr-merge.md) Definition
+  of Done section.
 - UI PRs require a screenshot or Playwright recording in the PR body. The
   `@demo-builder` subagent attaches it.
 - P1 is the **only** person who merges PRs to `main`. P2 and P3 review and
@@ -118,8 +121,11 @@ describing what they intended, and P1 resolves on the merge.
 - Conventional Commits style: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`,
   `chore:`.
 - Keep messages one line. Detail goes in the PR body, not the commit.
-- Claude Code's [`attribution.commit: "co-author"`](.claude/settings.json)
-  setting adds an automatic trailer; do not add a second one by hand.
+- If an engineer wants attribution to the AI surface that produced a
+  change, add a `Co-authored-by:` trailer manually (e.g.
+  `Co-authored-by: Cursor <noreply@cursor.sh>`). The template does not
+  inject one automatically — the diff is the deliverable, not the
+  attribution.
 
 ---
 
@@ -157,11 +163,12 @@ How three humans and nine subagents stay out of each other's way:
   uses their own subagents inside their own session. Subagents do not edit
   shared files (PLAN.md, AGENTS.md, MISSION.md) without explicit human
   approval.
-- **Rate-limit recovery**: if the Anthropic API rate-limits Claude Code,
-  the affected engineer runs `bash scripts/pi-rescue.sh` and continues in
-  Pi with the equivalent prompts from
-  [tools/pi-fallback/prompts/](tools/pi-fallback/prompts/). They announce
-  the switch in the team chat so others know which surface they're on.
+- **Rate-limit recovery**: if Cursor rate-limits an engineer, they run
+  `bash scripts/pi-rescue.sh` and continue in Pi with the equivalent
+  prompts from [tools/pi/prompts/](tools/pi/prompts/). Pi is a shared
+  resource — any of P1/P2/P3 may activate it without prior approval.
+  Announce the switch in the team chat so others know which surface
+  you're on.
 
 ---
 
@@ -181,6 +188,10 @@ Documented in [PLAYBOOK.md](PLAYBOOK.md) §5. Three rules during demo prep:
 
 See [MATRIX.md](MATRIX.md) for the full pitch — that file is written for
 the AI judge, not for the team. The short version: we standardized on
-Claude Code because subagents + shared slash commands + hooks compound
-across three engineers, and a terminal-first agent loop is the highest-
-leverage realization of "Code less, AI more".
+Cursor because Cursor Enterprise pools the team's tokens, gives every
+engineer the same harness (rules, commands, skills, hooks, MCP) the
+moment they open the workspace, and reads the subagent definitions in
+[.claude/agents/](.claude/agents/) natively. Pi is the shared
+rate-limit fallback. The configuration committed under
+[.cursor/](.cursor/) + [.claude/agents/](.claude/agents/) is the
+deliverable — that is the "Code less, AI more" thesis made visible.

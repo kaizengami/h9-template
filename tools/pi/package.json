@@ -1,0 +1,11 @@
+{
+  "name": "hack9-pi",
+  "version": "0.2.0",
+  "description": "Shared team Pi pack mirroring the highest-value Cursor commands. Any of P1/P2/P3 can activate it via scripts/pi-rescue.sh.",
+  "private": true,
+  "keywords": ["pi-package"],
+  "pi": {
+    "prompts": ["./prompts"],
+    "skills": ["./skills"]
+  }
+}

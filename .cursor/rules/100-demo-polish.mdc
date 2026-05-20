@@ -61,8 +61,8 @@ Audit each of these on the happy path:
   branch, commit as `polish(<scope>): <change>`, open a small PR.
 - Non-trivial fix: file in `TODO.md` and move on. Phase 4 is not the
   time to chase rabbit holes.
-- Bug that breaks the demo path: STOP. Escalate to `@bug-hunter` in
-  Claude Code immediately. The demo path must work end-to-end.
+- Bug that breaks the demo path: STOP. Escalate to `@bug-hunter`
+  immediately. The demo path must work end-to-end.
 
 ## What to capture
 

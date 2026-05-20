@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# scripts/pi-rescue.sh — install the Pi fallback pack and launch Pi.
+# scripts/pi-rescue.sh — activate the shared Pi pack and launch Pi.
 #
-# Use this when Claude Code is rate-limited or otherwise unavailable.
-# Installs tools/pi-fallback/ as a local Pi package and starts Pi in the
-# project root. See tools/pi-fallback/README.md for context.
+# Use this when Cursor rate-limits you mid-session, when you want to
+# scan a large context cheaply, or when you want to parallelize work
+# without occupying the Cursor token pool.
+#
+# Installs tools/pi/ as a local Pi package and starts Pi in the
+# project root. See tools/pi/README.md for context.
 
 set -euo pipefail
 
@@ -15,8 +18,8 @@ if ! git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 cd "$git_root"
 
-if [ ! -d "tools/pi-fallback" ]; then
-  echo >&2 "error: tools/pi-fallback/ not found at $git_root"
+if [ ! -d "tools/pi" ]; then
+  echo >&2 "error: tools/pi/ not found at $git_root"
   exit 67
 fi
 
@@ -31,10 +34,12 @@ fi
 
 cat <<'EOF'
 ╭─────────────────────────────────────────────────────────────────────╮
-│ Pi rescue mode                                                       │
+│ Pi pack — shared team resource                                       │
 │                                                                      │
-│ This switches your active harness from Claude Code to Pi. Use only   │
-│ when Claude Code is unavailable (rate limit, provider mismatch).     │
+│ This launches Pi with the team's shared prompt pack. Use it when     │
+│ Cursor rate-limits you, when you want a cheap large-context scan,   │
+│ or when you want to parallelize work without occupying the          │
+│ Cursor pool.                                                         │
 │                                                                      │
 │ Announce the switch in team chat per AGENTS.md §6 before continuing. │
 ╰─────────────────────────────────────────────────────────────────────╯
@@ -45,8 +50,8 @@ EOF
 # 'pi install -l <path>' writes to project-scoped .pi/settings.json
 # and adds the local path to the package list. No files copied.
 
-echo "Installing tools/pi-fallback/ into .pi/settings.json (local path install)…"
-pi install -l ./tools/pi-fallback
+echo "Installing tools/pi/ into .pi/settings.json (local path install)…"
+pi install -l ./tools/pi
 
 # --- launch Pi -----------------------------------------------------------
 
@@ -54,14 +59,16 @@ cat <<'EOF'
 
 Pi pack installed. Launching Pi…
 
-Available prompts in fallback mode:
+Available prompts:
   /review      — read-only PR/diff review
-  /test        — add Vitest + Playwright tests
+  /test        — add Vitest + Playwright + pytest tests
   /bug-hunt    — investigate a symptom, produce hypotheses
+  /onboard     — probe an unfamiliar repo, write ONBOARDING.md
+  /repro       — write a minimal failing test on a repro/ branch
 
-For anything else (planning, implementation, UI design), wait for
-Claude Code to recover and switch back. See AGENTS.md §6 and the
-fallback pack README at tools/pi-fallback/README.md.
+For anything else (planning, implementation, UI design, PR merge),
+return to Cursor when the rate limit clears or the parallel task
+completes. See AGENTS.md §6 and the pack README at tools/pi/README.md.
 EOF
 
 exec pi

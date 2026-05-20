@@ -24,7 +24,7 @@ non-trivial change.
 - Branch names: `feat/<short-kebab>`, `spike/<short-kebab>`,
   `fix/<short-kebab>`.
 - For parallel work, use git worktrees via the
-  [.claude/commands/spike.md](mdc:.claude/commands/spike.md) flow or
+  [.cursor/commands/spike.md](mdc:.cursor/commands/spike.md) flow or
   `bash scripts/spike.sh <name>`.
 
 ## Code citations
@@ -38,9 +38,9 @@ without citing.
 - Never commit secrets. Use `.env.local` for runtime values and
   `.env.example` for the public schema.
 - Anything matching `id_rsa`, `id_ed25519`, `*.pem` is off-limits.
-- The hooks in [.cursor/hooks.json](mdc:.cursor/hooks.json) and
-  [.claude/settings.json](mdc:.claude/settings.json) enforce some of
-  this; do not work around them.
+- The hooks in [.cursor/hooks.json](mdc:.cursor/hooks.json) and the
+  `/pr-merge` gate at [.cursor/commands/pr-merge.md](mdc:.cursor/commands/pr-merge.md)
+  enforce parts of this; do not work around them.
 
 ## Definition of Done
 

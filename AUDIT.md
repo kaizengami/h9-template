@@ -1,173 +1,178 @@
-# AUDIT.md — Phase 1 review against Anthropic best practices
+# AUDIT.md — Cursor-primary configuration review
 
-This document captures the audit of [Phase 1](README.md) against
-Anthropic's official Claude Code documentation as of May 2026
-([best practices](https://code.claude.com/docs/en/best-practices),
-[skills](https://docs.anthropic.com/en/docs/claude-code/skills)). It
-exists so the team — and the AI judge inspecting this repo — can see
-the reasoning behind every config choice and the named gaps we
-addressed in the audit follow-up.
+This document captures the audit of the current configuration against
+Cursor's public docs and recommended patterns as of May 2026 (skills,
+hooks, rules, commands, MCP, Task subagents). It exists so the team —
+and the AI judge inspecting this repo — can see the reasoning behind
+every config choice and the named gaps the team addressed.
+
+The previous iteration of this template was Claude-Code-primary; this
+audit covers the Cursor-primary rework. Subagent definitions in
+[.claude/agents/](.claude/agents/) were preserved because Cursor's
+`Task` tool reads that directory natively — see [MATRIX.md](MATRIX.md)
+for the strategic rationale.
 
 ## TL;DR
 
-- Phase 1 satisfies the **nine baseline best practices** Anthropic
-  publishes (table below).
-- Eight gaps surfaced (G1–G8). We addressed four of them in the
-  follow-up phase: added `.claude/skills/`, added a SessionStart
-  hook, strengthened the verification rule on `@implementer`, and
-  named the Writer/Reviewer pattern in [PLAYBOOK.md](PLAYBOOK.md).
-- Four gaps were intentionally left open (status line, auto mode by
-  default, Cursor skill mirror, Pi skill mirror) — see "Decisions
-  not to act" below.
+- The configuration satisfies Cursor's documented patterns for **rules,
+  commands, skills, hooks, MCP, and subagent delegation** (table
+  below).
+- Eight gaps surfaced (C1–C8). The team addressed six of them in the
+  rework: ported all artifacts under [.cursor/](.cursor/),
+  consolidated to a single shared primary, wired `sessionStart` +
+  `afterFileEdit` hooks, normalized skill frontmatter, removed
+  Claude-Code-only frontmatter fields, and added an "always-apply"
+  core rule.
+- Two gaps are intentionally left open (Cursor Background Agents,
+  Bugbot) — see "Decisions not to act on" below.
 
-## Baseline best practices we satisfy
+## Baseline Cursor patterns we satisfy
 
-| Anthropic guidance | Where we satisfy it |
+| Cursor guidance | Where we satisfy it |
 | --- | --- |
-| Short `CLAUDE.md` with `@AGENTS.md` import | [CLAUDE.md](CLAUDE.md) — points at AGENTS for shared content |
-| Permissions allow/deny configured | [.claude/settings.json](.claude/settings.json) — explicit deny for `.env`, `curl`, `git push --force` |
-| Hooks for deterministic actions | [.claude/hooks/post-edit-typecheck.sh](.claude/hooks/post-edit-typecheck.sh) and [.claude/hooks/session-start.sh](.claude/hooks/session-start.sh) |
-| Specialized subagents in `.claude/agents/` | 9 role-owned subagents with minimal tool allowlists |
-| Slash commands in `.claude/commands/` | 8 commands; `/spike`, `/ship`, `/review`, `/pr-merge` |
-| Worktree pattern for parallel work | [scripts/spike.sh](scripts/spike.sh), [AGENTS.md §4.2](AGENTS.md) |
-| Project-scoped MCP servers | [.mcp.json](.mcp.json) with Playwright + Context7 |
-| CLI tools (`gh`) preferred over API | [AGENTS.md §4.3](AGENTS.md), [.claude/commands/pr-merge.md](.claude/commands/pr-merge.md) |
-| Non-interactive (`claude -p`) for scripts | Referenced in [scripts/spike.sh](scripts/spike.sh) and [MATRIX.md](MATRIX.md) |
+| Workspace rules under `.cursor/rules/*.mdc` with frontmatter | 4 rules; `000-core.mdc` uses `alwaysApply: true` |
+| Slash commands under `.cursor/commands/*.md` with `$ARGUMENTS` | 12 commands; both new (`/onboard`, `/repro`) and ported (`/plan`, `/spike`, `/ship`, `/review`, `/test`, `/implement`, `/demo`, `/demo-record`, `/pr-merge`, `/visual-pr-review`) |
+| Workspace skills under `.cursor/skills/<name>/SKILL.md` | 9 skills with `name` + `description` (+ `disable-model-invocation` where appropriate) |
+| Hooks via `.cursor/hooks.json` schema v1 | [.cursor/hooks.json](.cursor/hooks.json) wires `sessionStart` and `afterFileEdit` |
+| Workspace MCP via `.cursor/mcp.json` | Playwright (demo recording) + Context7 (live docs) |
+| Subagent delegation via `Task` tool with `subagent_type` | `Task(..., subagent_type: "explore")` used by `explore-codebase`; named subagents in `.claude/agents/` (e.g. `@reviewer`, `@implementer`) referenced from `Task` |
+| `gh` CLI preferred over REST API | [AGENTS.md §4.3](AGENTS.md), [.cursor/commands/pr-merge.md](.cursor/commands/pr-merge.md) |
+| Worktree pattern for parallel work | [scripts/spike.sh](scripts/spike.sh), [.cursor/commands/spike.md](.cursor/commands/spike.md) |
+| Path-relative skill scripts (no Windows paths) | All bundled scripts use Unix paths and `${CURSOR_PROJECT_DIR}` |
 
 ## Gaps and how we addressed them
 
-### G1 — Verification loop was weak
+### C1 — Configuration was split across `.claude/` and `.cursor/`
 
-Anthropic names verification "the single highest-leverage thing".
-Phase 1 had a typecheck hook (advisory) and `@test-writer` only.
-There was no explicit "verify before declaring done" reminder in
-`@implementer` or `/ship`.
+The previous iteration kept Claude Code as a primary surface, with two
+parallel artifact trees. For a team-of-three under one license pool,
+this doubled maintenance with no compounding benefit.
 
-**Action:** strengthened [.claude/agents/implementer.md](.claude/agents/implementer.md)
-to require an explicit verification trace in the commit message
-("ran `pnpm typecheck`: clean", "ran `pnpm test foo`: passing 3/3").
-Never claims done without it.
+**Action:** ported `.claude/commands/`, `.claude/skills/`,
+`.claude/hooks/`, `.claude/settings.json`, `.mcp.json`, and `CLAUDE.md`
+into the `.cursor/` equivalents. Deleted the originals. Kept only
+[.claude/agents/](.claude/agents/) because Cursor's `Task` tool reads
+that directory natively.
 
-### G2 — No SessionStart context priming
+### C2 — Skill frontmatter used Claude-Code-only fields
 
-A teammate joining a session had no automatic snapshot of "what's
-in flight, what PRs are open, which branch we're on".
+`allowed-tools`, `argument-hint`, `paths`, `context`, and `agent` are
+Claude-Code-specific frontmatter fields. Cursor's skill loader (per
+[create-skill](https://docs.cursor.com/en/cli/cookbook) docs, May 2026)
+recognizes `name`, `description`, and `disable-model-invocation`.
 
-**Action:** added [.claude/hooks/session-start.sh](.claude/hooks/session-start.sh)
-which writes a 5-line state summary to **stderr** (the user's
-terminal, not the model context) every time `claude` starts. Shows
-branch, ahead/behind state, open PR titles, and the count of open
-items in `PLAN.md`.
+**Action:** during the port, dropped the Cursor-incompatible fields
+and moved their semantic content into the skill body:
 
-### G3 — No "explore" entry point
+- `argument-hint` → text in the "How to invoke" section
+- `paths` → text in the "When to use" section
+- `context: fork; agent: Explore` → instructions to invoke
+  `Task(..., subagent_type: "explore")`
+- `allowed-tools` → dropped; Cursor's permission model lives at the
+  workspace level, not per-skill
 
-Anthropic ships a built-in `Explore` subagent type for context-cheap
-research. We had no slash command to invoke it.
+### C3 — Hook event names were PascalCase (Claude Code style)
 
-**Action:** added [.claude/skills/explore-codebase/SKILL.md](.claude/skills/explore-codebase/SKILL.md)
-using `context: fork; agent: Explore`. Invoke via `/explore-codebase
-<topic>` — runs read-only research in an isolated subagent, returns
-a summary with `path:line` citations. Closes G3 and partially G1
-(forces exploration before implementation).
+Cursor uses camelCase event names (`sessionStart`, `afterFileEdit`,
+`postToolUse`, etc.) per its hooks schema v1.
 
-### G4 — Writer/Reviewer pattern was implicit
+**Action:** wrote [.cursor/hooks.json](.cursor/hooks.json) with the
+correct event names. `SessionStart` → `sessionStart`, `PostToolUse
+(Edit|Write|MultiEdit)` → `afterFileEdit`.
 
-Best practices explicitly calls out the Writer/Reviewer pattern
-("a fresh-context reviewer to avoid bias toward code it just wrote")
-as a quality lever. Our P2/P3 split implemented it without naming
-it.
+### C4 — Hook scripts hardcoded `CLAUDE_PROJECT_DIR`
 
-**Action:** edited [PLAYBOOK.md](PLAYBOOK.md) Phase 2 to name the
-pattern explicitly. P2 is the Writer; P3 is the Reviewer with fresh
-context. The team can now cite this verbatim during the pitch.
+The bundled scripts used `${CLAUDE_PROJECT_DIR}` to locate the
+project root. Cursor sets `${CURSOR_PROJECT_DIR}`.
 
-### G5 — No Skills
+**Action:** updated all hook + skill scripts to prefer
+`${CURSOR_PROJECT_DIR}` with a `${CLAUDE_PROJECT_DIR}` fallback (for
+running the same scripts from a Claude Code session if the team ever
+needs to). The hook JSON stdin parser also tries multiple field names
+(`file_path`, `path`, `tool_input.file_path`, `tool_input.path`) so
+it survives schema variance across surfaces.
 
-Skills are documented as the canonical home for procedural content
-that should load on demand. We had nothing under
-[.claude/skills/](.claude/skills/).
+### C5 — No always-apply core rule
 
-**Action:** added four skills:
+Cursor's rule system supports both glob-scoped and `alwaysApply: true`
+rules. A team-of-three needs at least one always-apply rule for the
+core workflow contract so it loads in every session regardless of
+which files are open.
 
-- [playwright-recording](.claude/skills/playwright-recording/) —
-  procedural skill with a bundled `scripts/record.sh`. Loaded on
-  demand during Phase 4 demo prep.
-- [shadcn-component-add](.claude/skills/shadcn-component-add/) —
-  reference skill auto-attached when working in `components/` or
-  `app/`.
-- [pr-checklist](.claude/skills/pr-checklist/) — invocable workflow
-  skill (`disable-model-invocation: true`) that produces a
-  Definition-of-Done checklist using dynamic context injection from
-  `gh pr view`/`diff`/`checks`.
-- [explore-codebase](.claude/skills/explore-codebase/) — `context:
-  fork; agent: Explore` for read-only research.
+**Action:** `.cursor/rules/000-core.mdc` uses `alwaysApply: true`.
+Other rules (`020-shadcn-ui.mdc`, `100-demo-polish.mdc`, etc.) are
+glob-scoped so they don't pollute unrelated sessions.
 
-### G6 — Auto mode not documented for the team
+### C6 — Subagent delegation wasn't documented for Cursor
 
-`--permission-mode auto` (Anthropic, March 2026) lets a classifier
-model approve routine actions. Useful for repetitive batch work but
-risky for general use.
+The `.claude/agents/*.md` files predate the rework. The team needed
+clarity that Cursor's `Task` tool reads these natively (no porting
+required), and that the `@implementer`/`@reviewer`/etc. references in
+commands and skills resolve via that mechanism.
 
-**Action:** documented in [CLAUDE.md](CLAUDE.md) "Context discipline"
-section as an advanced lever, with the caveat that the team's
-default remains the standard permission mode for safety.
+**Action:** documented in [AGENTS.md §3](AGENTS.md) and
+[MATRIX.md](MATRIX.md) "Why .claude/agents/ stays". Subagent owners
+listed in line 1 of each agent file (`# Owner: PN`).
 
-### G7 — `/btw` for off-topic side questions
+### C7 — Pi was assigned to one engineer
 
-Quick lookups can pollute the main context. `/btw` puts the answer
-in a dismissible overlay that doesn't enter conversation history.
+The previous setup tied Pi to P3, creating an artificial bottleneck
+when P1 or P2 needed to burst into Pi.
 
-**Action:** named in [CLAUDE.md](CLAUDE.md) "Context discipline"
-section.
+**Action:** renamed `tools/pi-fallback/` to `tools/pi/`. Repositioned
+the pack as a shared team resource in [tools/pi/APPEND_SYSTEM.md](tools/pi/APPEND_SYSTEM.md)
+and [tools/pi/README.md](tools/pi/README.md). Added two new prompts
+(`onboard.md`, `repro.md`) to mirror the new Cursor commands. Any
+engineer can run `bash scripts/pi-rescue.sh` from anywhere in the
+repo.
 
-### G8 — `/clear` discipline
+### C8 — MCP wasn't workspace-scoped for Cursor
 
-Best practices devotes a full section to using `/clear` between
-unrelated tasks to reset the context window. We mentioned nothing.
+The Playwright + Context7 MCP servers lived at `.mcp.json` (Claude
+Code's location). Cursor reads workspace MCP from `.cursor/mcp.json`.
 
-**Action:** named in [CLAUDE.md](CLAUDE.md) "Context discipline"
-section, with the rule "after two corrections on the same issue,
-`/clear` and start fresh with a better prompt."
+**Action:** ported `.mcp.json` to [.cursor/mcp.json](.cursor/mcp.json)
+verbatim and deleted the original. Cursor picks up both servers the
+moment the workspace opens.
 
 ## Decisions not to act on
 
 | Item | Why we left it | Revisit when |
 | --- | --- | --- |
-| Custom status line | Phase 1 has no `package.json`, no real session state to show beyond what SessionStart already prints. | Phase 2 after Next.js skeleton lands |
-| `--permission-mode auto` as default | 5-hour event, one bad `bash` execution could derail the team. Auto mode is documented as an opt-in. | After a successful dry-run with the standard mode |
-| Mirror skills into `.cursor/skills/` | Cursor is intentionally a thin secondary surface (see [MATRIX.md](MATRIX.md)). Mirroring skills would inflate artifacts without proportional benefit. | If the team ever promotes Cursor to a primary surface |
-| Mirror skills into `tools/pi-fallback/` | Pi is rate-limit-only. The three Pi prompts cover the safest read-only flows; adding more would imply Pi as a primary, which it isn't. | If Pi becomes a primary surface |
-| `--bare` mode as default | We rely on `.claude/` config loading. `--bare` is documented as a recovery option in [PLAYBOOK.md](PLAYBOOK.md). | Never (this is the right default) |
+| Cursor Background Agents | Remote-execution dependency adds setup risk in a 4-hour event. Local worktrees + tmux give the same parallelism with zero remote dependency. | Post-event template hardening |
+| Cursor Bugbot | Bugbot wants a PR-bot setup we don't have lead time to wire in. Out of scope for a 4-hour event. | If the team ever runs a longer hackathon or productionizes |
+| Custom Cursor status line | Phase 1 has no `package.json`, no real session state to show beyond what the `sessionStart` hook already prints to stderr. | Phase 2 after Next.js skeleton lands |
+| Per-engineer Cursor settings.local.json overrides | The shared config under `.cursor/` is the deliverable. Per-engineer drift would dilute "the configuration is the deliverable" thesis. | Never (this is the right default) |
+| Cursor SDK / Cloud Agents parallel spike | Same reason as Background Agents — too much setup risk for the event window. | If the team ever wants programmatic parallelism |
+| `--bare`-style fallback (skip auto-loaded config) | If hooks misbehave, we move `.cursor/hooks.json` aside (`.off` suffix). That's a quicker recovery than `--bare`. | Never; documented in PLAYBOOK recovery |
 
-## Given-repo prep (post-audit follow-up)
+## Given-repo prep (preserved from previous audit)
 
-The audit above was scoped to "build from spec." The team flagged that
-the hackathon may also (or instead) hand us 1–6 unfamiliar
-repositories with problems to fix, where without the right
+This section was scoped to the original "build from spec" audit. The
+team flagged that the hackathon may also (or instead) hand us 1–6
+unfamiliar repositories with problems to fix, where without the right
 preparation the problem won't be solvable in 4 hours by default. This
-section documents the second wave of additions targeted at that
-scenario.
+section documents the additions targeted at that scenario; they survived
+the Cursor rework intact (paths updated).
 
-### Five new skills
-
-All under [.claude/skills/](.claude/skills/), bringing the total to 9:
+### Five given-repo skills (now under `.cursor/skills/`)
 
 | Skill | Purpose | Why it's a moat |
 | --- | --- | --- |
-| [onboard-repo](.claude/skills/onboard-repo/) | Probe an unfamiliar repo, produce ONBOARDING.md (language, framework, build/test/run commands, hot files). Bundles `scripts/probe.sh`. | Vanilla Claude Code reads files in arbitrary order; this is systematic and produces a written brief in ~30 seconds. |
-| [reproduce-bug](.claude/skills/reproduce-bug/) | Write a minimal failing test, confirm it fails, hand off to `@bug-hunter`. | Vanilla CC will guess at fixes; this codifies "test first, fix after" per Anthropic's verification guidance. |
-| [bisect](.claude/skills/bisect/) | `git bisect run` wrapper with a generated step script. `disable-model-invocation: true`. | Vanilla CC reads `git log` linearly; this runs O(log n) regression-hunting. |
-| [issue-triage](.claude/skills/issue-triage/) | Pull a GitHub issue and emit structured triage (symptom, repro steps, suspected files with confidence labels). | Vanilla CC will read the issue and start coding; this extracts decision-ready input for `/repro`. |
-| [codemod](.claude/skills/codemod/) | ast-grep wrapper with mandatory dry-run + `codemod-plan.md` for human approval. `disable-model-invocation: true`. | Vanilla CC edits files one at a time; this applies syntactic rewrites across the whole tree with a safety gate. |
+| [onboard-repo](.cursor/skills/onboard-repo/) | Probe an unfamiliar repo, produce ONBOARDING.md (language, framework, build/test/run commands, hot files). Bundles `scripts/probe.sh`. | Vanilla agent behavior reads files in arbitrary order; this is systematic and produces a written brief in ~30 seconds. |
+| [reproduce-bug](.cursor/skills/reproduce-bug/) | Write a minimal failing test, confirm it fails, hand off to `@bug-hunter`. | Vanilla agent will guess at fixes; this codifies "test first, fix after" — the cheapest way to know when a bug is fixed. |
+| [bisect](.cursor/skills/bisect/) | `git bisect run` wrapper with a generated step script. `disable-model-invocation: true`. | Vanilla agent reads `git log` linearly; this runs O(log n) regression-hunting. |
+| [issue-triage](.cursor/skills/issue-triage/) | Pull a GitHub issue and emit structured triage (symptom, repro steps, suspected files with confidence labels). | Vanilla agent will read the issue and start coding; this extracts decision-ready input for `/repro`. |
+| [codemod](.cursor/skills/codemod/) | ast-grep wrapper with mandatory dry-run + `codemod-plan.md` for human approval. `disable-model-invocation: true`. | Vanilla agent edits files one at a time; this applies syntactic rewrites across the whole tree with a safety gate. |
 
-Two new commands wire them into Phase 1:
+Two commands wire them into Phase 1:
 
-- [/onboard](.claude/commands/onboard.md) — thin invoker for
+- [/onboard](.cursor/commands/onboard.md) — thin invoker for
   `onboard-repo`.
-- [/repro](.claude/commands/repro.md) — thin invoker for
+- [/repro](.cursor/commands/repro.md) — thin invoker for
   `reproduce-bug`.
 
-A new [CHALLENGE.md](CHALLENGE.md) template at the repo root branches
+A [CHALLENGE.md](CHALLENGE.md) template at the repo root branches
 [MISSION.md](MISSION.md) for the multi-repo case. The fork between
 "build from spec" and "fix given repos" is documented in
 [PLAYBOOK.md](PLAYBOOK.md) Phase 1.
@@ -175,14 +180,10 @@ A new [CHALLENGE.md](CHALLENGE.md) template at the repo root branches
 Surgical edits make the new skills load-bearing rather than optional:
 
 - [.claude/agents/implementer.md](.claude/agents/implementer.md) step 1
-  now requires `/onboard` before implementing in any repo without
+  requires `/onboard` before implementing in any repo without
   ONBOARDING.md.
 - [.claude/agents/bug-hunter.md](.claude/agents/bug-hunter.md) Rule 2
-  now requires `/repro` before investigation when no failing test
-  exists.
-- [.claude/settings.json](.claude/settings.json) `permissions.allow`
-  gained Python tool perms (`python`, `pip`, `pipx`, `uv`, `poetry`,
-  `pytest`, `ruff`, `mypy`).
+  requires `/repro` before investigation when no failing test exists.
 
 ### Language coverage choice: TypeScript + Python
 
@@ -205,13 +206,13 @@ back to manual onboarding (no skill) and runs the language's native
 test command directly. The probe script will still detect the
 language and surface basic structure.
 
-### Decisions not to act on (round 2)
+### Decisions not to act on (given-repo round)
 
 | Item | Why we left it | Revisit when |
 | --- | --- | --- |
 | Go/Rust/Java skill coverage | TS+Python coverage chosen explicitly. Adding more languages inflates detection logic. | Hackathon brief specifies non-TS/Python stack |
-| Mirror given-repo skills into `tools/pi-fallback/` | Pi is rate-limit-only. Mirroring 5 more skills would imply Pi as a primary. | If Pi becomes a primary surface |
-| New agent for "repo onboarder" | 9 agents is the right cap; procedural content goes in skills, not agents. | Never |
+| Mirror given-repo skills into `tools/pi/` | Pi pack already mirrors the 5 highest-value Cursor commands. Mirroring all 9 skills would duplicate maintenance. | If Pi becomes the team's primary |
+| New subagent for "repo onboarder" | 9 agents is the right cap; procedural content goes in skills, not agents. | Never |
 | GitHub Actions / CI integration | 4-hour event is too short to debug CI flakes. | Post-event template hardening |
 | GitLab/Linear adapters for `issue-triage` | Increases skill surface for low-probability scenarios. | Hackathon brief specifies non-GitHub tracker |
 
@@ -223,6 +224,5 @@ operating manual) and [MATRIX.md](MATRIX.md) (the judge-facing
 pitch).
 
 For the AI judge: this is evidence of conscious design. Every entry
-ties a public Anthropic best practice to a specific file in this
-repo. There are no orphan files; every config exists for a named
-reason.
+ties a public Cursor pattern to a specific file in this repo. There
+are no orphan files; every config exists for a named reason.
